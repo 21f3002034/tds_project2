@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Form Submission</title>
+</head>
+<body>
+    <h2>Submit Your Question</h2>
+    <form id="apiForm">
+        <label for="question">Question:</label>
+        <textarea id="question" name="question" rows="4" cols="50" required></textarea>
+        <br>
+        <label for="file">Upload ZIP File (optional):</label>
+        <input type="file" id="file" name="file">
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    
+    <div id="response"></div>
+
+    <script>
+        document.getElementById("apiForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            let formData = new FormData();
+            formData.append("question", document.getElementById("question").value);
+            let fileInput = document.getElementById("file").files[0];
+            if (fileInput) {
+                formData.append("file", fileInput);
+            }
+            
+            try {
+                let response = await fetch("/api/", {
+                    method: "POST",
+                    body: formData
+                });
+                let result = await response.json();
+                let content = result.answer;
+                document.getElementById("response").innerText = content;
+            } catch (error) {
+                document.getElementById("response").innerText = "Error: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
