@@ -69,7 +69,7 @@ async def root(request: Request):
     """Render the form template."""
     return templates.TemplateResponse("form.html", {"request": request})
 
-@app.post("/api/")
+@app.post("/api/",name="get_data")
 async def handle_request(
     question: str = Form(...),
     file: UploadFile = File(None)

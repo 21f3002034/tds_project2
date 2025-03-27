@@ -31,7 +31,7 @@
                 formData.append("file", fileInput);
             }
 
-            const backendUrl = "{{ request.url_for('your_api_endpoint') }}";
+            const backendUrl = "{{ request.url_for('get_data') }}";
             console.log("Backend URL:", backendUrl);
 
             try {
