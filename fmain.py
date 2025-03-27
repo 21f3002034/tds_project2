@@ -76,14 +76,14 @@ async def handle_request(
 ) -> Dict[str, str]:
     """Handles API requests with optional file uploads."""
     print(file)
-    query=query_gpt(question)
+    query=await query_gpt(question)
     try:
         
         tool_call = query["choices"][0]["message"]["tool_calls"][0]
         func_name = tool_call["function"]["name"]
         print(func_name)
         if file:
-            file_content = await file.read()
+            file_content = file.file.read()
             file_type, _ = mimetypes.guess_type(file.filename)
             print(f"File type detected: {file_type}")
             print(file_content)

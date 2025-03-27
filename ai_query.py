@@ -7,7 +7,7 @@ import json
 from fastapi.responses import JSONResponse
 
 
-def query_gpt(user_input: str) -> Dict[str, Any]:    
+async def query_gpt(user_input: str) -> Dict[str, Any]:    
     EMBEDDING_API_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Imxpc2EubWlyYW5kYUBncmFtZW5lci5jb20ifQ.nvcT6zt6b65Hf-rJE1Q0bwn4KrAeGzGZ6lCi5RP3IhY"
     tools = ftools(user_input)
