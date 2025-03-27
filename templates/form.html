@@ -31,7 +31,8 @@
                 formData.append("file", fileInput);
             }
 
-            const backendUrl = "http://localhost:8000/api/";  // Use full backend URL
+            const backendUrl = "{{ request.url_for('your_api_endpoint') }}";
+            console.log("Backend URL:", backendUrl);
 
             try {
                 let response = await fetch(backendUrl, {
