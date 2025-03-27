@@ -13,6 +13,9 @@ from ai_query import query_gpt
 from function_ai import fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18
 from typing import Dict, Any, List
 import mimetypes
+from fastapi.middleware.cors import CORSMiddleware
+
+
 
 def read_file(uploaded_file: UploadFile):
     """Reads different file types and returns their content as a string."""
@@ -46,7 +49,13 @@ def read_file(uploaded_file: UploadFile):
         raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to your frontend URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # OpenAI API Config
 EMBEDDING_API_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
 API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Imxpc2EubWlyYW5kYUBncmFtZW5lci5jb20ifQ.nvcT6zt6b65Hf-rJE1Q0bwn4KrAeGzGZ6lCi5RP3IhY"
