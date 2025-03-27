@@ -7,7 +7,7 @@
 </head>
 <body>
     <h2>Submit Your Question</h2>
-    <form id="apiForm">
+    <form id="apiForm" enctype="multipart/form-data" method="POST">
         <label for="question">Question:</label>
         <textarea id="question" name="question" rows="4" cols="50" required></textarea>
         <br>
@@ -25,19 +25,28 @@
             
             let formData = new FormData();
             formData.append("question", document.getElementById("question").value);
+            
             let fileInput = document.getElementById("file").files[0];
             if (fileInput) {
                 formData.append("file", fileInput);
             }
-            
+
+            const backendUrl = "http://localhost:8000/api/";  // Use full backend URL
+
             try {
-                let response = await fetch("/api/", {
+                let response = await fetch(backendUrl, {
                     method: "POST",
                     body: formData
                 });
+
+                if (!response.ok) {
+                    let errorText = await response.text();
+                    throw new Error(`Server responded with ${response.status}: ${errorText}`);
+                }
+
                 let result = await response.json();
-                let content = result.answer;
-                document.getElementById("response").innerText = content;
+                document.getElementById("response").innerText = JSON.stringify(result, null, 2);
+
             } catch (error) {
                 document.getElementById("response").innerText = "Error: " + error.message;
             }

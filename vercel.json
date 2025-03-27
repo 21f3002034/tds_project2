@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "builds": [
+      { "src": "fmain.py", "use": "@vercel/python" }
+    ],
+    "routes": [
+      { "src": "/api", "dest": "fmain.py" },
+      { "src": "/api/", "dest": "fmain.py" },
+      { "src": "/", "dest": "fmain.py" }
+    ]
+  }
