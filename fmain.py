@@ -8,7 +8,7 @@ import os
 import requests
 import json
 import base64
-from tasks_output import queries  # Absolute import
+# Absolute import
 from ai_query import query_gpt
 from function_ai import fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18
 from typing import Dict, Any, List
