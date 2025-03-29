@@ -68,33 +68,32 @@ What is the JSON output of the command? (Paste only the JSON body, not the heade
 
 
 
-def GA1_9(question):
-    json_pattern = r"\[.*?\]|\{.*?\}"
-    sort_pattern = r"Sort this JSON array of objects by the value of the (\w+) field.*?tie, sort by the (\w+) field"
-
-    json_match = re.search(json_pattern, question, re.DOTALL)
-    sort_match = re.search(sort_pattern, question, re.DOTALL)
-
-    if json_match and sort_match:
-        try:
-            json_data = json.loads(json_match.group())
-            sort_keys = [sort_match.group(1), sort_match.group(2)]
-            # print(sort_keys)
-            if isinstance(json_data, list) and all(isinstance(d, dict) for d in json_data):
-                sorted_data = sorted(json_data, key=lambda x: tuple(
-                    x.get(k) for k in sort_keys))
-                return json.dumps(sorted_data, separators=(",", ":"))
-            else:
-                return json.dumps(json_data, separators=(",", ":"))
-
-        except json.JSONDecodeError:
-            return None
-
-    return None
+def fg2_4(question: str):
+   email = re.findall(
+       r'Run this program on Google Colab, allowing all required access to your email ID: ([\w. % +-]+@[\w.-] +\.\w+)', question)[0]
+   expiry_year = "2025"
+   print(email, expiry_year)
+   hash_value = hashlib.sha256(
+       f"{email} {expiry_year}".encode()).hexdigest()[-5:]
+   return {"answer":str(hash_value)}
 
 question="""
-Let's make sure you know how to use JSON. Sort this JSON array of objects by the value of the age field. In case of a tie, sort by the name field. Paste the resulting JSON below without any spaces or newlines.
+Let's make sure you can access Google Colab. Run this program on Google Colab, allowing all required access to your email ID: 21f3002034@ds.study.iitm.ac.in.
 
-[{"name":"Alice","age":42},{"name":"Bob","age":60},{"name":"Charlie","age":54},{"name":"David","age":6},{"name":"Emma","age":20},{"name":"Frank","age":7},{"name":"Grace","age":41},{"name":"Henry","age":10},{"name":"Ivy","age":29},{"name":"Jack","age":46},{"name":"Karen","age":85},{"name":"Liam","age":58},{"name":"Mary","age":25},{"name":"Nora","age":11},{"name":"Oscar","age":19},{"name":"Paul","age":49}]"""
+import hashlib
+import requests
+from google.colab import auth
+from oauth2client.client import GoogleCredentials
 
-print(GA1_9(question))
+auth.authenticate_user()
+creds = GoogleCredentials.get_application_default()
+token = creds.get_access_token().access_token
+response = requests.get(
+  "https://www.googleapis.com/oauth2/v1/userinfo",
+  params={"alt": "json"},
+  headers={"Authorization": f"Bearer {token}"}
+)
+email = response.json()["email"]
+hashlib.sha256(f"{email} {creds.token_expiry.year}".encode()).hexdigest()[-5:]
+What is the result? (It should be a 5-character string)"""
+print(fg2_4(question))

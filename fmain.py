@@ -10,15 +10,24 @@ import json
 import base64
 # Absolute import
 from ai_query import query_gpt
-from function_ai import fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18
+from function_ai import fg5_9,fg5_10,fg5_8,fg5_7,fg5_6,fg5_5,fg5_4,fg5_3,fg5_2,fg5_1,fg4_9,fg4_6,fg4_7,fg4_5,fg4_3,fg4_4,fg4_2,fg4_1,fg3_6,fg3_5,fg3_4,fg3_3,fg3_2,fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18,fg2_1,fg2_2,fg2_3,fg2_4,fg2_5,fg2_6,fg2_7,fg2_8,fg3_1
 from typing import Dict, Any, List
 import mimetypes
 from fastapi.middleware.cors import CORSMiddleware
 
-
+def to_string(value):
+    """Converts any type of value to a string representation."""
+    if value is None:
+        return "None"
+    if not isinstance(value, str):
+        try:
+            # Converts lists, dicts, and serializable objects
+            return json.dumps(value)
+        except (TypeError, ValueError):
+            return str(value)  # Fallback for other types
+    return value
 
 def read_file(uploaded_file: UploadFile):
-    """Reads different file types and returns their content as a string."""
     file_ext = uploaded_file.filename.split(".")[-1].lower()
 
     try:
@@ -75,7 +84,6 @@ async def handle_request(
     file: UploadFile = File(None)
 ) -> Dict[str, str]:
     """Handles API requests with optional file uploads."""
-    print(file)
     query=await query_gpt(question)
     try:
         
@@ -86,21 +94,40 @@ async def handle_request(
             file_content = file.file.read()
             file_type, _ = mimetypes.guess_type(file.filename)
             print(f"File type detected: {file_type}")
-            print(file_content)
+        else:
+            file_content = None
+            
         # Handle cases with no arguments
-        args = {}
+        args = {"question": question} 
         if "arguments" in tool_call["function"] and tool_call["function"]["arguments"]:
-            args = json.loads(tool_call["function"]["arguments"])
-
-        args["question"] = question
+            loaded_args = json.loads(tool_call["function"]["arguments"])
+            if "file_content" in loaded_args:  # Preserve only file_content if it exists
+                args["file_content"] = loaded_args["file_content"]
         
         if file:
-            print(file_content)
             args["file_content"] = file_content
         # Dynamically call the function
         
         if func_name in globals():
-            return globals()[func_name](**args)  # Pass args only if present
+            if func_name in ["fg1_16"]:
+                if file:
+                    args["file_content"] = file
+                    print("file content:", args["file_content"])
+                output =await globals()[func_name](**args)  # Pass args only if present
+                output = to_string(output)
+                answer = {"answer": output}
+                print("response from here:", answer)
+                return answer
+            else:
+                responce = globals()[func_name](**args) # Pass args only if present
+                output = to_string(responce)
+                answer = {"answer": output}
+                print("no json output :", answer)
+                try:
+                    print("json output :", json.loads(output))
+                except json.JSONDecodeError:
+                    pass
+                return answer
         else:
             raise ValueError(f"Function '{func_name}' not found")
     
