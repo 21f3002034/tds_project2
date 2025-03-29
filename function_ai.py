@@ -22,7 +22,6 @@ import shutil
 import zipfile
 import hashlib
 import tempfile
-import asyncio
 import subprocess
 import requests
 import pytz
