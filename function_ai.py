@@ -806,6 +806,7 @@ def fg2_8(question: str):
     return answer
 
 def fg2_9(question: str, file_content = None):
+    from fastapi import FastAPI, Request
     try:
         import subprocess
         import stat
@@ -815,10 +816,8 @@ def fg2_9(question: str, file_content = None):
             buffer.write(file_content)
         os.chmod(file_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         # Set file permissions to 777 (read, write, execute for all)
-        port = 2020
-        subprocess.Popen(["uvicorn", "ass2of9:app", "--host",
-                        "0.0.0.0", "--port", str(port)])
-        answer = f"http://127.0.0.1:{port}/api"
+        
+        answer = str(Request.url) + "/api/vercel"
         return answer
     except:
         return "http://127.0.0.1:2000/api"

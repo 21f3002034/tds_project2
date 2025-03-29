@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request,Query
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 import zipfile
@@ -80,6 +80,7 @@ async def root(request: Request):
 
 @app.post("/api/",name="get_data")
 async def handle_request(
+    request: Request, 
     question: str = Form(...),
     file: UploadFile = File(None)
 ) -> Dict[str, str]:
@@ -118,6 +119,10 @@ async def handle_request(
                 answer = {"answer": output}
                 print("response from here:", answer)
                 return answer
+            elif func_name in ["fg2_9"]:
+                responce = globals()[func_name](**args)
+                base_url = str(request.base_url)+"api/fromvercel"
+                return {"answer": base_url}
             else:
                 responce = globals()[func_name](**args) # Pass args only if present
                 output = to_string(responce)
@@ -134,7 +139,18 @@ async def handle_request(
     except (KeyError, IndexError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=500, detail=f"Error processing GPT response: {str(e)}")
 
+@app.get("/api/fromvercel")
+async def get_students(class_: list[str] = Query(default=None, alias="class")):
+    from ass2of9 import read_student_data
+    students_data = read_student_data(os.path.join(os.getcwd(), "datafiles", "q-fastapi.csv"))
+    if class_:
+        filtered_students = [
+            student for student in students_data if student["class"] in class_]
+        print(filtered_students)
+        return JSONResponse(content={"students": filtered_students})
+    return JSONResponse(content={"students": students_data})
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    """error"""
+    
