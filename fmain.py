@@ -10,7 +10,7 @@ import json
 import base64
 # Absolute import
 from ai_query import query_gpt
-from function_ai import fg5_9,fg5_10,fg5_8,fg5_7,fg5_6,fg5_5,fg5_4,fg5_3,fg5_2,fg5_1,fg4_9,fg4_6,fg4_7,fg4_5,fg4_3,fg4_4,fg4_2,fg4_1,fg3_6,fg3_5,fg3_4,fg3_3,fg3_2,fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18,fg2_1,fg2_2,fg2_3,fg2_4,fg2_5,fg2_6,fg2_7,fg2_8,fg3_1
+from function_ai import fg2_9,fg5_9,fg5_10,fg5_8,fg5_7,fg5_6,fg5_5,fg5_4,fg5_3,fg5_2,fg5_1,fg4_9,fg4_6,fg4_7,fg4_5,fg4_3,fg4_4,fg4_2,fg4_1,fg3_6,fg3_5,fg3_4,fg3_3,fg3_2,fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18,fg2_1,fg2_2,fg2_3,fg2_4,fg2_5,fg2_6,fg2_7,fg2_8,fg3_1
 from typing import Dict, Any, List
 import mimetypes
 from fastapi.middleware.cors import CORSMiddleware

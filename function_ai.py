@@ -41,21 +41,6 @@ from collections import defaultdict
 import jellyfish
 
 
-# def stringify(value: object) -> str:
-#     """Converts any data type to a readable JSON-like string representation."""
-#     if value is None:
-#         return "null"  # More JSON-consistent
-    
-#     if isinstance(value, (list, dict, tuple, set)):
-#         try:
-#             return json.dumps(value, default=str, ensure_ascii=False, indent=2)
-#         except (TypeError, ValueError):
-#             return str(value)  # Fallback for unserializable cases
-    
-#     try:
-#         return str(value)
-#     except Exception:
-#         return repr(value)  # Last resort: return a debug-friendly representation
 
 def query_for_answer(user_input: str, files: List[UploadFile] = None):
     EMBEDDING_API_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
@@ -128,14 +113,12 @@ def fg1_2(question: str):
             url, email = match.groups()
             print("URL:", url)
             print("Email:", email)
-
-            # Make a GET request with email as a query parameter
             response = requests.get(url, params={"email": email})
             result = response.json()
             result["headers"]["User-Agent"] = "HTTPie/3.2.4"
             return result
 
-        return {"error": "Url and Email not found in the input text"}
+        raise ValueError("Url and Email not found in the input text")
     except:
         answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
         return answer
@@ -147,24 +130,24 @@ def fg1_3(question: str, file_content: bytes  = None):
     import subprocess
     with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as tmp_file:
         file_path = tmp_file.name
-        tmp_file.write(file_content)  # Write raw bytes content
+        tmp_file.write(file_content) 
     
     try:
-        # ✅ Format the file using mdformat
         subprocess.run(["mdformat", file_path], check=True)
 
-        # ✅ Read the formatted content
         with open(file_path, "rb") as f:
             formatted_content = f.read()
 
-        # ✅ Generate SHA-256 hash
         sha256_hash = hashlib.sha256(formatted_content).hexdigest()
 
     except subprocess.CalledProcessError as e:
-        return {"error": f"mdformat failed: {str(e)}"}
+        if file_content:
+            answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
+        else:
+            answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
+        return answer
 
     finally:
-        # ✅ Clean up the temporary file
         if os.path.exists(file_path):
             os.remove(file_path)
     return sha256_hash
@@ -176,20 +159,18 @@ def fg1_4(question: str, file_content: str = None):
         if match := re.search(sum_seq_pattern, question):
             rows, cols, start, step, begin, end = map(int, match.groups())
 
-            if cols == 0:  # Prevent division by zero
+            if cols == 0:  # division by zero
                 return 0
-
             if begin > 0:
                 begin -= 1
-
-            seq = np.arange(start, start + cols * step, step)
+            sequences = np.arange(start, start + cols * step, step)
             
-            if begin >= len(seq):  # Ensure begin is within range
+            if begin >= len(sequences):  # Ensure begin is within range
                 return 0
-            if end > len(seq):  # Ensure end does not exceed length
-                end = len(seq)
+            if end > len(sequences):  # Ensure end does not exceed length
+                end = len(sequences)
 
-            return int(np.sum(seq[begin:end]))
+            return int(np.sum(sequences[begin:end]))
     except:
         answer = query_for_answer(user_input=(question+"you are also google sheet expert and mathematician, note: **Output only the answer** with no extra wordings."))
         return answer
@@ -208,25 +189,24 @@ def fg1_5(question: str):
 def fg1_6(question: str, file_content: str = None):
     from bs4 import BeautifulSoup  # type: ignore
     try:
-        html_data = None
-
-        # Check for URL in the question
+        html_content = None
+        #URL
         url_match = re.search(r"https?://[^\s]+", question)
         if url_match:
             source = url_match.group(0)
             response = requests.get(source, timeout=5)
             response.raise_for_status()
-            html_data = response.text
+            html_content = response.text
         elif file_content:  # If a file is provided
             with open(file_content, "r", encoding="utf-8") as file:
-                html_data = file.read()
+                html_content = file.read()
         else:  # No URL or file, extract from the question itself
             soup = BeautifulSoup(question, "html.parser")
             div_text = soup.find("div")
             return div_text.get_text(strip=True) if div_text else ""
 
         # Parse the HTML and extract hidden input
-        soup = BeautifulSoup(html_data, "html.parser")
+        soup = BeautifulSoup(html_content, "html.parser")
         hidden_input = soup.find("input", {"type": "hidden"})
         if hidden_input:
             answer = hidden_input.get("value", "")
@@ -239,8 +219,8 @@ def fg1_6(question: str, file_content: str = None):
     return answer
 
 def fg1_7(question: str, file_content: str = None):
-    weekday_count_pattern = r"How many (\w+)s are there in the date range (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})\?"
-    if match := re.search(weekday_count_pattern, question):
+    weekend_count = r"How many (\w+)s are there in the date range (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})\?"
+    if match := re.search(weekend_count, question):
         weekday_str, start_date, end_date = match.groups()
         weekdays = {"Monday": 0, "Tuesday": 1, "Wednesday": 2,
                     "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6}
@@ -248,35 +228,37 @@ def fg1_7(question: str, file_content: str = None):
             start, end = datetime.strptime(
                 start_date, "%Y-%m-%d"), datetime.strptime(end_date, "%Y-%m-%d")
             answer = sum(1 for i in range((end - start).days + 1) if (start +
-                         timedelta(days=i)).weekday() == weekdays[weekday_str])
-     
-    output = answer
-    
+                         timedelta(days=i)).weekday() == weekdays[weekday_str])     
+    output = answer    
     return str(output)
 
 def fg1_8(question: str, file_content: bytes  = None):
-    file_download_pattern = r"which has a single (.+\.csv) file inside\."
-    match = re.search(file_download_pattern, question)
+    try:
+        file_download_pattern = r"which has a single (.+\.csv) file inside\."
+        match = re.search(file_download_pattern, question)
 
-    if not match:
-        return "CSV filename not found in question"
+        if not match:
+            raise ValueError("file not found in the ZIP")
 
-    csv_filename = match.group(1)
-
-    # Read ZIP file as bytes
-    zip_bytes = file_content
-
-    # Open ZIP file in memory
-    with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zf:
-        if csv_filename not in zf.namelist():
-            return f"{csv_filename} not found in ZIP"
-
-        with zf.open(csv_filename) as csv_file:
-            df = pd.read_csv(csv_file)
-            ans = df["answer"].iloc[0] if "answer" in df.columns else "Column not found"
-            sci_notation = "{:.0e}".format(ans).replace(".0", "").replace("+", "")
-        return sci_notation
-    return "Failed to process ZIP file"
+        csv_filename = match.group(1)
+        # Read ZIP file as bytes
+        zip_bytes = file_content
+        # Open ZIP file in memory
+        with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zf:
+            if csv_filename not in zf.namelist():
+                return f"{csv_filename} not found in ZIP"
+            with zf.open(csv_filename) as csv_file:
+                df = pd.read_csv(csv_file)
+                ans = df["answer"].iloc[0] if "answer" in df.columns else "Column not found"
+                sci_notation = "{:.0e}".format(ans).replace(".0", "").replace("+", "")
+            return sci_notation
+        raise ValueError("file not found in the ZIP")
+    except Exception as e:
+        if file_content:
+            answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
+        else:
+            answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
+        return answer
 
 def fg1_9(question: str, file_content: bytes  = None):
     json_pattern = r"\[.*?\]|\{.*?\}"
@@ -822,6 +804,24 @@ def fg2_8(question: str):
     
     output = {"answer": str(answer)}
     return answer
+
+def fg2_9(question: str, file_content = None):
+    try:
+        import subprocess
+        import stat
+        os.makedirs("datafiles", exist_ok=True)
+        file_path = os.path.join(os.getcwd(), "datafiles", "q-fastapi.csv")
+        with open(file_path, "wb") as buffer:
+            buffer.write(file_content)
+        os.chmod(file_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+        # Set file permissions to 777 (read, write, execute for all)
+        port = 2020
+        subprocess.Popen(["uvicorn", "ass2of9:app", "--host",
+                        "0.0.0.0", "--port", str(port)])
+        answer = f"http://127.0.0.1:{port}/api"
+        return answer
+    except:
+        return "http://127.0.0.1:2000/api"
 
 def fg3_1(question: str, file_content: str = None):
     try:    
@@ -2426,5 +2426,5 @@ def ftools(user_input: str):
     
     
 
-    tools = [g5_10,g5_9,g5_8,g5_7,g5_6,g5_5,g5_4,g5_3,g5_1,g5_2,g4_3,g4_4,g4_5,g4_6,g4_7,g4_8,g4_9,g4_2,g4_1,g1_1, g1_2,g1_3,g1_4,g1_5,g1_6,g1_7,g1_8,g1_9,g1_10,g1_11,g1_12,g1_13,g1_14,g1_15,g1_16,g1_17,g1_18,g2_1,g2_2,g2_3,g2_4,g2_5,g2_6,g2_7,g2_8,g3_1,g3_2,g3_3,g3_4,g3_5,g3_6]
+    tools = [g2_9,g5_10,g5_9,g5_8,g5_7,g5_6,g5_5,g5_4,g5_3,g5_1,g5_2,g4_3,g4_4,g4_5,g4_6,g4_7,g4_8,g4_9,g4_2,g4_1,g1_1, g1_2,g1_3,g1_4,g1_5,g1_6,g1_7,g1_8,g1_9,g1_10,g1_11,g1_12,g1_13,g1_14,g1_15,g1_16,g1_17,g1_18,g2_1,g2_2,g2_3,g2_4,g2_5,g2_6,g2_7,g2_8,g3_1,g3_2,g3_3,g3_4,g3_5,g3_6]
     return tools
