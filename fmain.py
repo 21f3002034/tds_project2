@@ -259,21 +259,21 @@ async def execute_query(q: str):
             status_code=400,
             detail=f"Failed to parse query: {q}. Error: {str(e)}. Pattern matches: {pattern_debug_info}"
         )
-import aiohttp
+import httpx
+from bs4 import BeautifulSoup
 WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/wiki/"
 @app.get("/api/outline")
 async def get_country_outline(
     country: str = Query(..., title="Country Name", description="Name of the country")
 ):
-    from bs4 import BeautifulSoup
     url = WIKIPEDIA_BASE_URL + country.replace(" ", "_")
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                return {"error": "Could not fetch Wikipedia page"}
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        if response.status_code != 200:
+            return {"error": "Could not fetch Wikipedia page"}
 
-            html_content = await response.text()
+        html_content = response.text  # No need for `await` in httpx
 
     soup = BeautifulSoup(html_content, "html.parser")
 
