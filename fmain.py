@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request,Query
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request,Query,requests
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 import zipfile
@@ -140,6 +140,9 @@ async def handle_request(
                 answer = {"answer": output}
                 print("response from here:", answer)
                 return answer
+            elif func_name in ["fg4_3"]:
+                base_url = "https://studentmarkga2.vercel.app/api"
+                return {"answer": base_url}
             else: 
                 responce = globals()[func_name](**args) # Pass args only if present
                 output = to_string(responce)
@@ -293,7 +296,6 @@ async def get_country_outline(
         markdown_outline += f"{'#' * level} {heading.get_text(strip=True)}\n\n"
 
     return {"country": country, "outline": markdown_outline}
-
 
 
 if __name__ == "__main__":

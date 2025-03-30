@@ -47,9 +47,9 @@ async def query_gpt(user_input: str) -> Dict[str, Any]:
         - fg1_14: What does running cat * | sha256sum in that folder show in bash?
         - fg1_15: Use ls with options to list all files in the folderWhat's the total size of all file
         - fg1_16: What does running grep . * | LC_ALL=C sort | sha256sum in bash on that folder show?
-        - fg1_18: What is the total sales of all the items in the
+        - fg1_18: There is a tickets table in a SQLite database that has columns type, What is the total sales of all the items in the Write SQL to calculate it.
         - fg2_1: Write documentation in Markdown for
-        - fg2_2: Upload your losslessly compressed image
+        - fg2_2: compress it losslessly to an image that is less than 1,500 bytes. By losslessly, we mean that every pixel in the new image should be identical to the original image. Upload your losslessly compressed image
         - fg2_3: What is the GitHub Pages URL
         - fg2_4: Run this program on Google Colab What is the result? (It should be a 5-character string)
         - fg2_5: Create a new Google Colab notebook calculate the number of pixels What is the result? (It should be a number)
@@ -77,12 +77,12 @@ async def query_gpt(user_input: str) -> Dict[str, Any]:
         - fg4_8: Trigger the workflow and wait for it to complete
         - fg4_9: Retrieve the PDF file containing the student marks table By automating the extraction and analysis
         - fg4_10: What is the markdown content of the PDF
-        - fg5_1: Clean this Excel data
+        - fg5_1: Clean this Excel data,The total margin is defined as What is the total margin for transactions before, Clean this Excel data
         - fg5_2: data analyst at EduTrack Systems, your task is to process this text file How many unique students are there in the file 
-        - fg5_3: What is the number of successful GET requests
+        - fg5_3: What is the number of successful GET requests for pages under 
         - fg5_4: Across all requests under  web log entry 
         - fg5_5: Use phonetic clustering algorithm
-        - fg5_6: What is the total sales value?
+        - fg5_6:  your task is to develop a program that will:, What is the total sales value?
         - fg5_7: How many times does DX appear as a key?
         - fg5_8: Write a DuckDB SQL query
         - fg5_9: What is the text of the transcript

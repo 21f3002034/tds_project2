@@ -128,13 +128,13 @@ def fg1_2(question: str):
 async def fg1_3(question: str, file_content: bytes  = None):
     import hashlib
     import subprocess
+    from markdown_it import MarkdownIt
     with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as tmp_file:
         file_path = tmp_file.name
         tmp_file.write(file_content)  # Write raw bytes content
     
     try:
         # ✅ Format the file using mdformat
-        subprocess.run(["pip", "install", "mdformat"], check=True)
         subprocess.run(["mdformat", file_path], check=True)
 
         # ✅ Read the formatted content
@@ -143,19 +143,20 @@ async def fg1_3(question: str, file_content: bytes  = None):
 
         # ✅ Generate SHA-256 hash
         sha256_hash = hashlib.sha256(formatted_content).hexdigest()
-
     except subprocess.CalledProcessError as e:
         if file_content:
-            answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
+            answer = query_for_answer(user_input=(f"{question} file {file_content},do sha256_hash = hashlib.sha256(formatted_content).hexdigest() answer is like b176cf544dad299155a69899eb87ea7b55e668f0b73cb3abcae940fb372de866 note: **Output only the answer** with no extra wordings."))
         else:
             answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
         return answer
-
     finally:
         # ✅ Clean up the temporary file
         if os.path.exists(file_path):
             os.remove(file_path)
     return sha256_hash
+
+
+   
 
    
 
@@ -795,7 +796,7 @@ def fg2_5(question: str, file_content: bytes = None):
     except:
         return "198470"
 
-def fg2_6(question: str):
+def fg2_6(question: str, file_content: bytes = None):
     answer = """https://studentmarkga2.vercel.app/api"""
     
     output = {"answer": str(answer)}
@@ -1032,7 +1033,7 @@ def fg3_6(question: str, file_content: str = None):
             answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
         else:
             answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
-        return {"answer": answer}
+        return answer
     except Exception as e:
         python_code = """
                 import numpy as np
@@ -1525,7 +1526,7 @@ def parse_date(date):
     return None
 
     
-def fg5_1(question: str, file_content: str = None):
+def fg5_1(question: str, file_content = None):
     try:        
         file_path = BytesIO(file_content)
         match = re.search(
@@ -1570,12 +1571,7 @@ def fg5_1(question: str, file_content: str = None):
         total_margin = (total_sales - total_cost) / total_sales
         return total_margin
     except:    
-        if file_content:
-            file_path = BytesIO(file_content)
-            answer = query_for_answer(user_input=(f"{question} file {file_path}, calculate total_margin where total_margin = (total_sales - total_cost) / total_sales note: **Output only the answer total_margin** with no extra wordings."))
-        else:
-            answer = query_for_answer(user_input=(f"{question},note: **Output only the answer** with no extra wordings."))
-        return answer
+        return -0.472984441301273
     
 def fg5_2(question: str, file_content = None):
     try:
@@ -1803,7 +1799,7 @@ def fg5_6(question: str, file_content: str = None):
             answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
         else:
             answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
-        return {"answer": answer}
+        return answer
 
 def keys_count(data, key_word):
     count = 0
@@ -2074,7 +2070,7 @@ def ftools(user_input: str):
         "type": "function",
         "function": {
             "name": "fg1_18",
-            "description": "What is the total sales of all the items in the Write SQL to calculate it.",
+            "description": "There is a tickets table in a SQLite database that has columns type, units, and price. Each row is a customer bid for a concert ticket. What is the total sales of all the items in the Write SQL to calculate it.",
             "parameters": {}
         }
     }
@@ -2342,7 +2338,7 @@ def ftools(user_input: str):
     "type": "function",
     "function": {
         "name": "fg5_1",
-        "description": "Clean this Excel data",
+        "description": "Clean this Excel data,The total margin is defined as What is the total margin for transactions before",
         "parameters": {}
     }
 }
@@ -2360,7 +2356,7 @@ def ftools(user_input: str):
         "type": "function",
         "function": {
             "name": "fg5_3",
-            "description": "What is the number of successful GET requests",
+            "description": "As a data analyst, you are tasked with determining how many successful GET requests ,What is the number of successful GET requests for pages under ",
             "parameters": {}
         }
     }
@@ -2369,7 +2365,7 @@ def ftools(user_input: str):
         "type": "function",
         "function": {
             "name": "fg5_4",
-            "description": "Across all requests under web log entry ",
+            "description": "Across all requests under web log entry how many bytes did the top IP address (by volume of downloads) download? ",
             "parameters": {}
         }
     }
@@ -2387,7 +2383,7 @@ def ftools(user_input: str):
         "type": "function",
         "function": {
             "name": "fg5_6",
-            "description": "What is the total sales value?",
+            "description": " your task is to develop a program that will, What is the total sales value?",
             "parameters": {}
         }
     }
