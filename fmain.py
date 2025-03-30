@@ -134,6 +134,12 @@ async def handle_request(
             elif func_name in ["fg4_3"]:
                 base_url = str(request.base_url)+"api/outline"
                 return {"answer": base_url}
+            elif func_name in ["fg1_3"]:
+                output =await globals()[func_name](**args)  # Pass args only if present
+                output = to_string(output)
+                answer = {"answer": output}
+                print("response from here:", answer)
+                return answer
             else: 
                 responce = globals()[func_name](**args) # Pass args only if present
                 output = to_string(responce)

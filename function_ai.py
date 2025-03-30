@@ -39,6 +39,7 @@ from io import BytesIO
 import gzip
 from collections import defaultdict
 import jellyfish
+import asyncio
 
 
 
@@ -125,20 +126,18 @@ def fg1_2(question: str):
 
     
 
-def fg1_3(question: str, file_content: bytes  = None):
+async def fg1_3(question: str, file_content: bytes  = None):
     import hashlib
     import subprocess
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as tmp_file:
-        file_path = tmp_file.name
-        tmp_file.write(file_content) 
-    
     try:
-        subprocess.run(["mdformat", file_path], check=True)
-
-        with open(file_path, "rb") as f:
-            formatted_content = f.read()
-
-        sha256_hash = hashlib.sha256(formatted_content).hexdigest()
+        process = await asyncio.create_subprocess_exec(
+            "npx", "-y", "prettier@3.4.2", "--parser", "markdown",
+            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE
+        )
+        formatted_output, _ = await process.communicate(file_content)
+        if not formatted_output:
+            {"error": "Prettier failed"}
+        return hashlib.sha256(formatted_output).hexdigest()
 
     except subprocess.CalledProcessError as e:
         if file_content:
@@ -147,11 +146,7 @@ def fg1_3(question: str, file_content: bytes  = None):
             answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
         return answer
 
-    finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    return sha256_hash
-
+    
 def fg1_4(question: str, file_content: str = None):
     try:    
         sum_seq_pattern = r"SUM\(ARRAY_CONSTRAIN\(SEQUENCE\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\),\s*(\d+),\s*(\d+)\)\)"
