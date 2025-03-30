@@ -10,10 +10,12 @@ import json
 import base64
 # Absolute import
 from ai_query import query_gpt
-from function_ai import fg2_9,fg5_9,fg5_10,fg5_8,fg5_7,fg5_6,fg5_5,fg5_4,fg5_3,fg5_2,fg5_1,fg4_9,fg4_6,fg4_7,fg4_5,fg4_3,fg4_4,fg4_2,fg4_1,fg3_6,fg3_5,fg3_4,fg3_3,fg3_2,fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18,fg2_1,fg2_2,fg2_3,fg2_4,fg2_5,fg2_6,fg2_7,fg2_8,fg3_1
+from function_ai import fg3_9,fg3_7,fg2_9,fg5_9,fg5_10,fg5_8,fg5_7,fg5_6,fg5_5,fg5_4,fg5_3,fg5_2,fg5_1,fg4_9,fg4_6,fg4_7,fg4_5,fg4_3,fg4_4,fg4_2,fg4_1,fg3_6,fg3_5,fg3_4,fg3_3,fg3_2,fg1_1, fg1_2, fg1_3, fg1_4, fg1_5, fg1_6,fg1_7,fg1_10,fg1_17,fg1_8,fg1_9,fg1_11,fg1_12,fg1_13,fg1_14,fg1_15,fg1_16,fg1_18,fg2_1,fg2_2,fg2_3,fg2_4,fg2_5,fg2_6,fg2_7,fg2_8,fg3_1
 from typing import Dict, Any, List
 import mimetypes
 from fastapi.middleware.cors import CORSMiddleware
+from ass3of7 import get_embeddings, cosine_similarity, SearchRequest, SearchResponse
+from function_ai import query_for_answer
 
 def to_string(value):
     """Converts any type of value to a string representation."""
@@ -67,7 +69,7 @@ app.add_middleware(
 )
 # OpenAI API Config
 EMBEDDING_API_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
-API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Imxpc2EubWlyYW5kYUBncmFtZW5lci5jb20ifQ.nvcT6zt6b65Hf-rJE1Q0bwn4KrAeGzGZ6lCi5RP3IhY"
+API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIxZjMwMDIwMzRAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.KEQjxQbjAIHY8_0l-WpiOL_KrBslnPTFZnexib9N6qc"
 
 # Templates directory 
 templates = Jinja2Templates(directory="templates")
@@ -123,7 +125,16 @@ async def handle_request(
                 responce = globals()[func_name](**args)
                 base_url = str(request.base_url)+"api/fromvercel"
                 return {"answer": base_url}
-            else:
+            elif func_name in ["fg3_7"]:
+                base_url = str(request.base_url)+"similarity"
+                return {"answer": base_url}
+            elif func_name in ["fg3_8"]:
+                base_url = str(request.base_url)+"execute"
+                return {"answer": base_url}
+            elif func_name in ["fg4_3"]:
+                base_url = str(request.base_url)+"api/outline"
+                return {"answer": base_url}
+            else: 
                 responce = globals()[func_name](**args) # Pass args only if present
                 output = to_string(responce)
                 answer = {"answer": output}
@@ -134,7 +145,11 @@ async def handle_request(
                     pass
                 return answer
         else:
-            raise ValueError(f"Function '{func_name}' not found")
+            if file_content:
+                answer = query_for_answer(user_input=(f"{question} file {file_content}, note: **Output only the answer** with no extra wordings."))
+            else:
+                answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
+            return {"answer": to_string(answer)}
     
     except (KeyError, IndexError, json.JSONDecodeError) as e:
         raise HTTPException(status_code=500, detail=f"Error processing GPT response: {str(e)}")
@@ -149,6 +164,130 @@ async def get_students(class_: list[str] = Query(default=None, alias="class")):
         print(filtered_students)
         return JSONResponse(content={"students": filtered_students})
     return JSONResponse(content={"students": students_data})
+
+@app.post("/similarity")
+async def get_similar_docs(request: SearchRequest) -> SearchResponse:
+    import logging   
+    try:
+        logging.debug(f"Received request: {request}")
+        # Get embeddings for all texts
+        texts = request.docs + [request.query]
+        embeddings = get_embeddings(texts)
+        # Separate document embeddings and query embedding
+        document_emb = embeddings[:-1]
+        q_emb = embeddings[-1]
+        # Calculate similarities
+        similarities = [
+            (i, cosine_similarity(doc_emb, q_emb))
+            for i, doc_emb in enumerate(document_emb)
+        ]
+        # Sort by similarity score in descending order
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        # Get top 3 most similar documents
+        top_matches = [request.docs[idx] for idx, _ in similarities[:3]]
+        return SearchResponse(matches=top_matches)
+
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/execute")
+async def execute_query(q: str):
+    import re
+    import json
+    from ass3of8 import get_embeddings, cosine_similarity, SearchRequest, SearchResponse
+    try:
+        query = q.lower()
+        pattern_debug_info = {}       
+        if re.search(r"ticket.*?\d+", query):
+            ticket_id = int(re.search(r"ticket.*?(\d+)", query).group(1))
+            return {"name": "get_ticket_status", "arguments": json.dumps({"ticket_id": ticket_id})}
+        pattern_debug_info["ticket_status"] = re.search(
+            r"ticket.*?\d+", query) is not None        
+        if re.search(r"schedule.?\d{4}-\d{2}-\d{2}.?\d{2}:\d{2}.*?room", query, re.IGNORECASE):
+            date_match = re.search(r"(\d{4}-\d{2}-\d{2})", query)
+            time_match = re.search(r"(\d{2}:\d{2})", query)
+            room_match = re.search(
+                r"room\s*([A-Za-z0-9]+)", query, re.IGNORECASE)
+            if date_match and time_match and room_match:
+                return {"name": "schedule_meeting", "arguments": json.dumps({
+                    "date": date_match.group(1),
+                    "time": time_match.group(1),
+                    "meeting_room": f"Room {room_match.group(1).capitalize()}"
+                })}
+        pattern_debug_info["meeting_scheduling"] = re.search(
+            r"schedule.?\d{4}-\d{2}-\d{2}.?\d{2}:\d{2}.*?room", query, re.IGNORECASE) is not None
+       
+        if re.search(r"expense", query):
+            emp_match = re.search(r"employee\s*(\d+)", query, re.IGNORECASE)
+            if emp_match:
+                return {"name": "get_expense_balance", "arguments": json.dumps({
+                    "employee_id": int(emp_match.group(1))
+                })}
+        pattern_debug_info["expense_balance"] = re.search(
+            r"expense", query) is not None
+       
+        if re.search(r"bonus", query, re.IGNORECASE):
+            emp_match = re.search(
+                r"emp(?:loyee)?\s*(\d+)", query, re.IGNORECASE)
+            year_match = re.search(r"\b(2024|2025)\b", query)
+            if emp_match and year_match:
+                return {"name": "calculate_performance_bonus", "arguments": json.dumps({
+                    "employee_id": int(emp_match.group(1)),
+                    "current_year": int(year_match.group(1))
+                })}
+        pattern_debug_info["performance_bonus"] = re.search(
+            r"bonus", query, re.IGNORECASE) is not None
+
+        if re.search(r"(office issue|report issue)", query, re.IGNORECASE):
+            code_match = re.search(
+                r"(issue|number|code)\s*(\d+)", query, re.IGNORECASE)
+            dept_match = re.search(
+                r"(in|for the)\s+(\w+)(\s+department)?", query, re.IGNORECASE)
+            if code_match and dept_match:
+                return {"name": "report_office_issue", "arguments": json.dumps({
+                    "issue_code": int(code_match.group(2)),
+                    "department": dept_match.group(2).capitalize()
+                })}
+        pattern_debug_info["office_issue"] = re.search(
+            r"(office issue|report issue)", query, re.IGNORECASE) is not None
+
+        raise HTTPException(
+            status_code=400, detail=f"Could not parse query: {q}")
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to parse query: {q}. Error: {str(e)}. Pattern matches: {pattern_debug_info}"
+        )
+
+@app.get("/api/outline")
+async def get_country_outline(country: str = Query(..., title="Country Name", description="Name of the country")):
+    import aiohttp
+    from lxml import html
+    WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/wiki/"
+    url = WIKIPEDIA_BASE_URL + country.replace(" ", "_")
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                return {"error": "Could not fetch Wikipedia page"}
+
+            html_content = await response.text()
+
+    tree = html.fromstring(html_content)
+    
+    # Extract headings using XPath
+    headings = tree.xpath("//h1 | //h2 | //h3 | //h4 | //h5 | //h6")
+
+    # Extract level from H1, H2, ..., H6
+    markdown_outline = "## Contents\n\n"
+    for heading in headings:
+        level = int(heading.tag[1])  
+        markdown_outline += f"{'#' * level} {heading.text_content().strip()}\n\n"
+       
+    return {"country": country, "outline": markdown_outline}
+
+
 
 if __name__ == "__main__":
     import uvicorn

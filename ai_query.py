@@ -56,7 +56,7 @@ async def query_gpt(user_input: str) -> Dict[str, Any]:
         - fg2_6: What is the Vercel URL
         - fg2_7: Trigger the action and make sure it is the most recent action.
         - fg2_8: What is the Docker image URL
-        - fg2_9: What is the API URL endpoint for FastAPI
+        - fg2_9: What is the API URL endpoint for FastAPI /api
         - fg2_10: What is the ngrok URL
         - fg3_1: Write a Python program that uses httpx to send a POST request to OpenAI's API to analyze the sentiment of this (meaningless) text
         - fg3_2: How many input tokens does it use up (Number of tokens)
@@ -64,8 +64,8 @@ async def query_gpt(user_input: str) -> Dict[str, Any]:
         - fg3_4: Write just the JSON body (not the URL, nor headers) for the POST request that sends these two pieces of content (text and image URL)
         - fg3_5: Your task is to write the JSON body for a POST request that will be sent to the OpenAI API endpoint to obtain the text embedding
         - fg3_6: Your task is to write a Python function most_similar(embeddings)
-        - fg3_7: What is the API URL endpoint for your implementation? It might look like: http://127.0.0.1:8000/similarity
-        - fg3_8: What is the API URL endpoint for your implementation? It might look like: http://127.0.0.1:8000/execute
+        - fg3_7: What is the API URL endpoint for your implementation? It might look like: /similarity
+        - fg3_8: What is the API URL endpoint for your implementation? It might look like: /execute
         - fg3_9: Write a prompt that will get the LLM to say Yes
         - fg4_1: What is the total number of ducks across players on page number ESPN Cricinfo's ODI batting stats
         - fg4_2: Utilize IMDb's advanced web search
