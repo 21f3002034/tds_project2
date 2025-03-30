@@ -27,7 +27,7 @@ async def query_gpt(user_input: str) -> Dict[str, Any]:
                 "content": """
                 
         You are an assistant capable of executing various tasks. 
-        You are an expert in identifying contextual matches from following functions, , even if the phrasing is different first analyze all and decide.
+        You are an expert in identifying contextual matches from following functions, , even if the phrasing is different first analyze all and decide ,carefully analyze.
         Use the following functions for specific tasks:  
         
         - fg1_1: What is the output of code -s?
