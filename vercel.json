@@ -8,6 +8,7 @@
       { "src": "/api/", "dest": "fmain.py" },
       { "src": "/", "dest": "fmain.py" },
       { "src": "/api/fromvercel", "dest": "fmain.py" },
-      { "src": "/similarity", "dest": "fmain.py" }
+      { "src": "/similarity", "dest": "fmain.py" },
+      { "src": "/execute", "dest": "fmain.py" }
     ]
   }
