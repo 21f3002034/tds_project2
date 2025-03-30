@@ -45,7 +45,7 @@ import asyncio
 
 def query_for_answer(user_input: str, files: List[UploadFile] = None):
     EMBEDDING_API_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
-    API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Imxpc2EubWlyYW5kYUBncmFtZW5lci5jb20ifQ.nvcT6zt6b65Hf-rJE1Q0bwn4KrAeGzGZ6lCi5RP3IhY"
+    API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjIxZjMwMDIwMzRAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.KEQjxQbjAIHY8_0l-WpiOL_KrBslnPTFZnexib9N6qc"
     
    
     try:
@@ -124,20 +124,25 @@ def fg1_2(question: str):
         answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
         return answer
 
-    
 
 async def fg1_3(question: str, file_content: bytes  = None):
     import hashlib
     import subprocess
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as tmp_file:
+        file_path = tmp_file.name
+        tmp_file.write(file_content)  # Write raw bytes content
+    
     try:
-        process = await asyncio.create_subprocess_exec(
-            "npx", "-y", "prettier@3.4.2", "--parser", "markdown",
-            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE
-        )
-        formatted_output, _ = await process.communicate(file_content)
-        if not formatted_output:
-            {"error": "Prettier failed"}
-        return hashlib.sha256(formatted_output).hexdigest()
+        # ✅ Format the file using mdformat
+        subprocess.run(["pip", "install", "mdformat"], check=True)
+        subprocess.run(["mdformat", file_path], check=True)
+
+        # ✅ Read the formatted content
+        with open(file_path, "rb") as f:
+            formatted_content = f.read()
+
+        # ✅ Generate SHA-256 hash
+        sha256_hash = hashlib.sha256(formatted_content).hexdigest()
 
     except subprocess.CalledProcessError as e:
         if file_content:
@@ -145,6 +150,14 @@ async def fg1_3(question: str, file_content: bytes  = None):
         else:
             answer = query_for_answer(user_input=(f"{question}, note: **Output only the answer** with no extra wordings."))
         return answer
+
+    finally:
+        # ✅ Clean up the temporary file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    return sha256_hash
+
+   
 
     
 def fg1_4(question: str, file_content: str = None):
