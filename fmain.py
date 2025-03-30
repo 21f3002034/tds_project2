@@ -259,14 +259,15 @@ async def execute_query(q: str):
             status_code=400,
             detail=f"Failed to parse query: {q}. Error: {str(e)}. Pattern matches: {pattern_debug_info}"
         )
-
+import aiohttp
+WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/wiki/"
 @app.get("/api/outline")
-async def get_country_outline(country: str = Query(..., title="Country Name", description="Name of the country")):
-    import aiohttp
-    from lxml import html
-    WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/wiki/"
+async def get_country_outline(
+    country: str = Query(..., title="Country Name", description="Name of the country")
+):
+    from bs4 import BeautifulSoup
     url = WIKIPEDIA_BASE_URL + country.replace(" ", "_")
-    
+
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status != 200:
@@ -274,17 +275,17 @@ async def get_country_outline(country: str = Query(..., title="Country Name", de
 
             html_content = await response.text()
 
-    tree = html.fromstring(html_content)
-    
-    # Extract headings using XPath
-    headings = tree.xpath("//h1 | //h2 | //h3 | //h4 | //h5 | //h6")
+    soup = BeautifulSoup(html_content, "html.parser")
 
-    # Extract level from H1, H2, ..., H6
+    # Extract headings H1 to H6
+    headings = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
+
+    # Build Markdown-style outline
     markdown_outline = "## Contents\n\n"
     for heading in headings:
-        level = int(heading.tag[1])  
-        markdown_outline += f"{'#' * level} {heading.text_content().strip()}\n\n"
-       
+        level = int(heading.name[1])  # Extract level from tag (h1-h6)
+        markdown_outline += f"{'#' * level} {heading.get_text(strip=True)}\n\n"
+
     return {"country": country, "outline": markdown_outline}
 
 
